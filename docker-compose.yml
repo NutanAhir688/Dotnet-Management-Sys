@@ -1,0 +1,50 @@
+services:
+  database:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: inventory_db
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Password_1234
+    ports:
+      - "1433:1433"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Password_1234 -C -Q 'SELECT 1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - inventory_network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: inventory_api
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - "ConnectionStrings__DefaultConnection=Server=database;Database=InventoryManagementDb;User Id=sa;Password=Password_1234;TrustServerCertificate=True;"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - inventory_network
+
+  ui:
+    build:
+      context: ./InventoryManagement.UI
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=http://localhost:5000/api/v1
+    container_name: inventory_ui
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - inventory_network
+
+networks:
+  inventory_network:
+    driver: bridge
