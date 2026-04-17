@@ -20,11 +20,11 @@ RUN dotnet publish "InventoryManagement.API.csproj" -c Release -o /app/publish /
 # Stage 3: Final stage (Runtime)
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
+ENV ASPNETCORE_URLS=http://0.0.0.0:80
 COPY --from=publish /app/publish .
 
 # Expose ports
-EXPOSE 8080
-EXPOSE 8081
+EXPOSE 80
 
 # Set the entry point
 ENTRYPOINT ["dotnet", "InventoryManagement.API.dll"]
