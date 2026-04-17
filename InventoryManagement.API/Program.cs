@@ -34,12 +34,9 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 builder.Host.UseSerilog();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-if (string.IsNullOrEmpty(connectionString))
-{
-    throw new Exception("❌ DefaultConnection is not configured. Check environment variables.");
-}
+// 2. DbContext
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found. Set it via appsettings.json or the ConnectionStrings__DefaultConnection environment variable.");
 
 Log.Information("Starting with Connection String: {ConnectionString}", connectionString);
 

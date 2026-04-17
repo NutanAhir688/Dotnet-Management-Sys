@@ -1,0 +1,52 @@
+name: "Copilot Setup Steps"
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    env:
+      # Override the connection string so the agent can reach the service container.
+      # The SA password here must match MSSQL_SA_PASSWORD in the service definition below.
+      # To use a custom password, store it as a repository secret named MSSQL_SA_PASSWORD
+      # (Settings → Secrets and variables → Actions) and it will be picked up automatically.
+      MSSQL_SA_PASSWORD: ${{ secrets.MSSQL_SA_PASSWORD || 'Password_1234' }}
+      ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=InventoryManagementDb;User Id=sa;Password=${{ secrets.MSSQL_SA_PASSWORD || 'Password_1234' }};TrustServerCertificate=True"
+
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_SA_PASSWORD: ${{ secrets.MSSQL_SA_PASSWORD || 'Password_1234' }}
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Password_1234 -C -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore .NET dependencies
+        run: dotnet restore InventoryManagement.API/InventoryManagement.API.sln
