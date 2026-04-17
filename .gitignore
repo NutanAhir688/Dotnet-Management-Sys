@@ -13,7 +13,6 @@ Migrations/
 Models/
 Middlewares/
 Properties/
-Services/
 Validators/
 
 # User-specific files
