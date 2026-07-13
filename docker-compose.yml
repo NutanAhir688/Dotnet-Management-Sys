@@ -1,14 +1,16 @@
 services:
   database:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: mysql:8.0
     container_name: inventory_db
     environment:
-      - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=Password_1234
+      MYSQL_ROOT_PASSWORD: Password_1234
+      MYSQL_DATABASE: InventoryManagementDb
+      MYSQL_USER: inventory
+      MYSQL_PASSWORD: Password_1234
     ports:
-      - "1433:1433"
+      - "3306:3306"
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Password_1234 -C -Q 'SELECT 1'"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,7 +26,7 @@ services:
       - "5000:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - "ConnectionStrings__DefaultConnection=Server=database;Database=InventoryManagementDb;User Id=sa;Password=Password_1234;TrustServerCertificate=True;"
+      - "ConnectionStrings__DefaultConnection=Server=database;Port=3306;Database=InventoryManagementDb;User=inventory;Password=Password_1234;SslMode=None;"
     depends_on:
       database:
         condition: service_healthy
