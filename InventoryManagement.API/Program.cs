@@ -41,7 +41,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 Log.Information("Starting with Connection String: {ConnectionString}", connectionString);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 // 3. DI Services
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();

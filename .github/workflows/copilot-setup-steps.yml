@@ -19,22 +19,18 @@ jobs:
 
     env:
       # Override the connection string so the agent can reach the service container.
-      # The SA password here must match MSSQL_SA_PASSWORD in the service definition below.
-      # To use a custom password, store it as a repository secret named MSSQL_SA_PASSWORD
-      # (Settings → Secrets and variables → Actions) and it will be picked up automatically.
-      MSSQL_SA_PASSWORD: ${{ secrets.MSSQL_SA_PASSWORD || 'Password_1234' }}
-      ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=InventoryManagementDb;User Id=sa;Password=${{ secrets.MSSQL_SA_PASSWORD || 'Password_1234' }};TrustServerCertificate=True"
+      ConnectionStrings__DefaultConnection: "Server=localhost;Port=3306;Database=InventoryManagementDb;Uid=root;SslMode=None;"
 
     services:
-      mssql:
-        image: mcr.microsoft.com/mssql/server:2022-latest
+      mysql:
+        image: mysql:8.0
         env:
-          ACCEPT_EULA: Y
-          MSSQL_SA_PASSWORD: ${{ secrets.MSSQL_SA_PASSWORD || 'Password_1234' }}
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          MYSQL_DATABASE: InventoryManagementDb
         ports:
-          - 1433:1433
+          - 3306:3306
         options: >-
-          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Password_1234 -C -Q 'SELECT 1'"
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -u root || exit 1"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
